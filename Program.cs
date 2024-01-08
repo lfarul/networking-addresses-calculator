@@ -7,6 +7,8 @@ namespace Binary
 {
     internal class Program
     {
+
+        //Global variables
         //Maska
         private static string binaryOutputMaska = "";
         private static string dotMaska = "";
@@ -32,41 +34,67 @@ namespace Binary
         // Convert IP and Mask to binary
         public static string ConvertToBinary(string input, string type)
         {
-            // Split the inout address by dots
+            // Split the input address by dots
             string[] inputParts = input.Split('.');
             string binaryOutput = "";
+            
 
-            foreach (string part in inputParts)
+            if(type == "maska" && inputParts.Length == 1)
             {
-                int result = int.Parse(part);
-                binaryOutput += Convert.ToString(result, 2).PadLeft(8, '0');
-            }
+                //Console.WriteLine("Wpadłeś tutaj :): " + inputParts.Length);
 
-            if (type.ToLower() == "ip")
-            {
-                binaryOutputIp = binaryOutput;
-                //Console.WriteLine("IP:          " + binaryOutputIp);
-                SeparateAdressByDots(binaryOutputIp, "ip");
-            }
+                string binaryOutputlocal = "";
+                int inputMask = int.Parse(input);
 
-            else if (type.ToLower() == "maska")
-            {
-                binaryOutputMaska = binaryOutput;
-                //Console.WriteLine("Maska:       " + binaryOutputMaska);
+                for(int i = 0; i < inputMask; i++)
+                {
+                    binaryOutputlocal += '1';
+                }
+
+                const int numberOfbits = 32;
+
+                binaryOutput = binaryOutputlocal.PadRight(numberOfbits, '0');
+
                 SeparateAdressByDots(binaryOutputMaska, "maska");
                 NotMaska(binaryOutputMaska);
-                //CalculateNumberOfHosts(binaryOutputMaska);
-            }
+                //Console.WriteLine("Wynik: " + binaryOutput);
 
+            }
             else
-            {
-                Console.WriteLine("Unknown type");
-            }
+            
+                foreach (string part in inputParts)
+                {
+                    int result = int.Parse(part);
+                    binaryOutput += Convert.ToString(result, 2).PadLeft(8, '0');
+                }
 
-            //reset the variable to store data for ip and maska
-            binaryOutput = "";
+                if (type.ToLower() == "ip")
+                {
+                    binaryOutputIp = binaryOutput;
+                    //Console.WriteLine("IP:          " + binaryOutputIp);
+                    SeparateAdressByDots(binaryOutputIp, "ip");
+                }
 
-            return binaryOutput;
+                else if (type.ToLower() == "maska")
+                {
+                    binaryOutputMaska = binaryOutput;
+                    //Console.WriteLine("Maska:       " + binaryOutputMaska);
+                    SeparateAdressByDots(binaryOutputMaska, "maska");
+                    NotMaska(binaryOutputMaska);
+                    //CalculateNumberOfHosts(binaryOutputMaska);
+                }
+
+                else
+                {
+                    Console.WriteLine("Unknown type");
+                }
+
+                //reset the variable to store data for ip and maska
+                binaryOutput = "";
+
+                return binaryOutput;
+            
+            //return binaryOutput;
         }
 
         // Calculate network address = IP x Maska
@@ -315,17 +343,18 @@ namespace Binary
 
         static void Main(string[] args)
         {
-            //Console.Write("Proszę podaj adres IP: ");
-            //string ip = Console.ReadLine();
+            Console.Write("Proszę podaj adres IP: ");
+            string ip = Console.ReadLine();
 
-            //Console.Write("Proszę podaj adres maski: ");
-            //string maska = Console.ReadLine(); 
+            Console.Write("Proszę podaj adres maski: ");
+            string maska = Console.ReadLine();
 
-            string ip = "192.168.1.1";
-            string maska = "255.255.255.0";
+            //string ip = "192.168.1.1";
+            //string maska = "255.255.255.0";
+
             ConvertToBinary(ip, "ip");
             ConvertToBinary(maska, "maska");
-            
+
             Console.WriteLine("IP: " + ip);
             Console.WriteLine("Maska: " + maska);
             Console.WriteLine("Number of hosts: " + CalculateNumberOfHosts(binaryOutputMaska));
@@ -338,7 +367,6 @@ namespace Binary
             ConvertToDecimal(dotBroadcast, "broadcastingAddress");
             EstimateFirstHostAddress(decimalNetAdr);
             EstimateLastHostAddress(decimalBroadcast);
-
         }
     }
 }

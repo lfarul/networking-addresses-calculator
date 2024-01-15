@@ -7,7 +7,6 @@ namespace Binary
 {
     internal class Program
     {
-
         //Global variables
         //Maska
         private static string binaryOutputMaska = "";
@@ -71,6 +70,7 @@ namespace Binary
                 if (type.ToLower() == "ip")
                 {
                     binaryOutputIp = binaryOutput;
+
                     //Console.WriteLine("IP:          " + binaryOutputIp);
                     SeparateAdressByDots(binaryOutputIp, "ip");
                 }
@@ -204,7 +204,6 @@ namespace Binary
         {
             for(int i = 0; i < networkAddress.Length; i++)
             {
-                // 1+1=1; 1+0=1;0+1=1;0+0=0
 
                 if (networkAddress[i] == '0' && notMaska[i] == '0')
                     
@@ -300,7 +299,7 @@ namespace Binary
                 // Join the octets back together with dots
                  estimatedAddress = string.Join(".", octets);
 
-                Console.WriteLine("First Host IP: " + estimatedAddress);
+                Console.WriteLine("First Host IP:     " + estimatedAddress);
     
             }
 
@@ -330,7 +329,7 @@ namespace Binary
                 // Join the octets back together with dots
                 estimatedAddress = string.Join(".", octets);
 
-                Console.WriteLine("Last Host IP:  " + estimatedAddress);
+                Console.WriteLine("Last Host IP:      " + estimatedAddress);
 
             }
 
@@ -341,12 +340,53 @@ namespace Binary
             return estimatedAddress;
         }
 
+        // Display complementary information
+        public static bool ComplementaryInformationRequired (string input)
+        {
+
+            bool result;
+            
+            if (input == "no")
+            {
+                result = false;
+                Console.WriteLine("----------------------------------------------");
+                Console.WriteLine("No further details required");
+            }
+
+            else if (input == "yes")
+            {
+                result = true;
+                Console.WriteLine("----------------------------------------------");
+
+                Console.WriteLine("IP:          " + binaryOutputIp);
+                Console.WriteLine("Maska:       " + binaryOutputMaska);
+                Console.WriteLine("!Maska:      " + notMaska);
+                Console.WriteLine("BroadcastAd: " + broadcastingAddress);
+                Console.WriteLine("NetAdres:    " + networkAdress);
+                Console.WriteLine("dotNetAdres: " + dotNetworkAdress);
+                Console.WriteLine("dotIP:       " + dotIP);
+                Console.WriteLine("dotMaska:    " + dotMaska);
+                Console.WriteLine("dot!Maska:   " + dotNotMaska);
+                Console.WriteLine("dotBroadcast:" + dotBroadcast);
+
+            }
+
+            else
+            {
+                result = false;
+                Console.WriteLine("----------------------------------------------");
+                Console.WriteLine("No input provided");
+            }
+            
+            return result;
+        }
+
         static void Main(string[] args)
         {
-            Console.Write("Proszę podaj adres IP: ");
+            Console.Write("Please provide address IP: ");
             string ip = Console.ReadLine();
 
-            Console.Write("Proszę podaj adres maski: ");
+            Console.Write("Please provide subnet address: ");
             string maska = Console.ReadLine();
 
             //string ip = "192.168.1.1";
@@ -355,8 +395,10 @@ namespace Binary
             ConvertToBinary(ip, "ip");
             ConvertToBinary(maska, "maska");
 
+            Console.WriteLine("----------------------------------------------");
+
             Console.WriteLine("IP: " + ip);
-            Console.WriteLine("Maska: " + maska);
+            Console.WriteLine("Maska:  " + maska);
             Console.WriteLine("Number of hosts: " + CalculateNumberOfHosts(binaryOutputMaska));
 
             CalculateNetworkAdress(binaryOutputIp, binaryOutputMaska);
@@ -367,6 +409,13 @@ namespace Binary
             ConvertToDecimal(dotBroadcast, "broadcastingAddress");
             EstimateFirstHostAddress(decimalNetAdr);
             EstimateLastHostAddress(decimalBroadcast);
+
+            Console.WriteLine();
+
+            Console.Write("Do you want to see complementary information (yes/no) ?: ");
+            string input = Console.ReadLine();
+
+            ComplementaryInformationRequired(input);
         }
     }
 }

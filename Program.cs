@@ -1,8 +1,12 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
+using System.Net;
+using System.Net.Sockets;
+using System.Linq;
 
 
 namespace Binary
@@ -30,7 +34,165 @@ namespace Binary
         private static string broadcastingAddress = "";
         private static string dotBroadcast = "";
         private static string decimalBroadcast = "";
+     
+        public static bool ContainForbiddenSymbols(string input, string forbiddenSymbols)
+        {
+            //char[] chars = forbiddenSymbols.ToCharArray();
 
+            foreach (char symbol in forbiddenSymbols)
+            {
+                if (input.Contains(symbol.ToString()))
+
+                return true;
+            }
+
+            return false;
+        }
+        public static string ReplaceForbiddenSymbols(string input,string forbiddenSymbols)
+        {
+
+            //char[] chars = forbiddenSymbols.ToCharArray();
+
+            foreach(char symbol in forbiddenSymbols)
+            {
+                input = input.Replace(symbol.ToString(), ".");
+            }
+
+            //input.GetType();
+
+            Console.WriteLine("Input after the santization: " + input);
+
+            return input.ToString();
+        }
+
+
+        //IP validation - if 4 octets and within 0-255
+
+        //Option 1: Parsing IP address
+        //public static bool IpValidation(string ip)
+        //{
+
+        //    // Try parsing the IP address
+        //    if (IPAddress.TryParse(ip, out IPAddress parsedIp))
+        //    {
+        //        // Check if it's a valid IPv4 address
+        //        if (parsedIp.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+        //        {
+        //            return true;
+        //        }
+        //    }
+
+        //    return false;
+        //}
+
+        //Option 2: Parsing IP address
+        public static bool IpValidation(string ip)
+        {
+            string[] ipOctets = ip.Split('.');
+
+            if (ipOctets.Length == 4)
+            {
+                foreach (string octet in ipOctets)
+                {
+                    if (int.TryParse(octet, out int value))
+                    {
+                        if (value >= 0 && value <= 255)
+                        {
+                            // Octet is valid, continue checking the next one
+                            continue;
+                        }
+                        else
+                        {
+                            // Octet is not within the valid range
+                            Console.WriteLine($"Invalid octet: {octet}. Please try again.");
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        // Parsing failed, the octet is not a valid integer
+                        Console.WriteLine($"Invalid octet format: {octet}. Please try again.");
+                        return false;
+                    }
+                }
+
+                // All octets are valid
+                return true;
+            }
+
+            // Incorrect number of octets
+
+            string wrongIpFormat = String.Join(".", ipOctets);
+            Console.WriteLine($"Provided IP: {wrongIpFormat} has only {ipOctets.Length} octets.  Please try again.");
+            return false;
+        }
+
+        public static bool MaskaValidation(string maska)
+        {
+            string[] maskaOctets = maska.Split('.');
+            string subnet = "";
+
+            if (maskaOctets.Length == 4)
+            {
+                foreach (string octet in maskaOctets)
+                {
+                    if (int.TryParse(octet, out int value))
+                    {
+                        if (value >= 0 && value <= 255)
+                        {
+                            // Octet is valid, continue checking the next one
+                            continue;
+                        }
+                        else
+                        {
+                            // Octet is not within the valid range
+                            Console.WriteLine($"Invalid octet: {octet}. Please try again.");
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        // Parsing failed, the octet is not a valid integer
+                        Console.WriteLine($"Invalid octet format: {octet}. Please try again.");
+                        return false;
+                    }
+                }
+
+                // All octets are valid
+                return true;
+            }
+
+            else if (maskaOctets.Length == 1)
+            {
+                subnet = maskaOctets[0];
+
+                if (int.TryParse(subnet, out int value))
+                {
+                    if (value >= 0 && value <= 32)
+                    {
+                        Console.WriteLine($"Provided subnet {subnet} meets validation criteria.");
+                        return true;
+                    }
+                    else
+                    {
+                        // Subnet is not within the valid range
+                        Console.WriteLine($"Provided subnet: {value} is out of range. Please try again.");
+                        return false;
+                    }
+                }
+
+                // Parsing failed, the subnet is not a valid integer
+                Console.WriteLine($"Cannot parse to int: {subnet}. Please try again.");
+                return false;
+            }
+
+            else
+            {
+                string wrongMaskaFormat = String.Join(".", maskaOctets);
+                Console.WriteLine($"Invalid subnet format: {wrongMaskaFormat}. Please try again.");
+                return false;
+            }
+        }
 
         // Convert IP and Mask to binary
         public static string ConvertToBinary(string input, string type)
@@ -273,6 +435,8 @@ namespace Binary
 
             numberOfHosts = (int)Math.Pow(podstawa, wykladnik);
 
+            WriteToFile(numberOfHosts.ToString());
+
             return numberOfHosts;
         }
 
@@ -297,7 +461,9 @@ namespace Binary
                  estimatedAddress = string.Join(".", octets);
 
                 Console.WriteLine($"First Host IP\t\t {estimatedAddress}");
-    
+                WriteToFile(estimatedAddress);
+
+
             }
 
             else
@@ -328,6 +494,7 @@ namespace Binary
 
 
                 Console.WriteLine($"Last Host IP\t\t {estimatedAddress}");
+                WriteToFile(estimatedAddress);
 
             }
 
@@ -343,7 +510,7 @@ namespace Binary
         {
 
             bool result;
-            input = input.ToLower();
+            input = input.ToLower().Trim();
             
             if (input == "no")
             {
@@ -385,22 +552,85 @@ namespace Binary
             return result;
         }
 
+        public static void WriteToFile(string data)
+        {
+            string folder = @"C:\Users\a630281\Desktop";
+            string fileName = "records.txt";
+
+            string fullPath = folder + fileName;
+            DateTime date = DateTime.Now;
+
+            using (StreamWriter writer = new StreamWriter(fullPath))
+            {
+                writer.WriteLine(date.ToString());
+                writer.WriteLine(data);
+                
+            }
+        }
+
         static void Main(string[] args)
         {
             NewProgram newProgram = new NewProgram();
             newProgram.SayHello();
 
-            if (newProgram.CanWeStart())
+            string ip = "";
+            string maska = "";
+            bool ipValidationStatus;
+            bool maskaValidationStatus;
 
+            //define potential symbols that users may use when typing IP and Subnet
+            string forbiddenSymbols = ",;/!@#$%^&*()_+";
+
+            if (newProgram.CanWeStart())    
             {
-                Console.Write("\nPlease provide address IP: ");
-                string ip = Console.ReadLine();
+                do
+                {
+                    Console.Write("\nPlease provide address IP: ");
+                    ip = Console.ReadLine();
 
-                Console.Write("Please provide subnet address: ");
-                string maska = Console.ReadLine();
+                    if (ContainForbiddenSymbols(ip, forbiddenSymbols))
+                    {
+                        Console.WriteLine("IP contains forbidden symbols.");
+                        string ipSanitized = ReplaceForbiddenSymbols(ip, forbiddenSymbols);
+                        ip = ipSanitized;
+                        ipValidationStatus = IpValidation(ip);
+                    }
+                    
+                    else
+                    {
+                        ipValidationStatus = IpValidation(ip);   
+                    }
 
-                //string ip = "192.168.1.1";
-                //string maska = "255.255.255.0";
+                    if (!ipValidationStatus)
+                    {
+                        continue;
+                    }
+                } while (!ipValidationStatus);
+
+                do
+                {
+                    Console.Write("Please provide subnet mask: ");
+                    maska = Console.ReadLine();
+
+                    if (ContainForbiddenSymbols(maska, forbiddenSymbols))
+                    {
+                        Console.WriteLine("Maska contains forbidden symbols.");
+
+                        string maskaSanitized = ReplaceForbiddenSymbols(maska, forbiddenSymbols);
+                        maska = maskaSanitized;
+                        maskaValidationStatus = MaskaValidation(maska);
+                    }
+
+                    else
+                    {
+                        maskaValidationStatus = MaskaValidation(maska);
+                    }
+
+                    if (!maskaValidationStatus)
+                    {
+                        continue;
+                    }
+                } while (!maskaValidationStatus);
 
                 ConvertToBinary(ip, "ip");
                 ConvertToBinary(maska, "maska");
@@ -429,6 +659,8 @@ namespace Binary
                 string input = Console.ReadLine();
 
                 ComplementaryInformationRequired(input);
+
+                WriteToFile(input);
             }
 
             else
@@ -460,6 +692,7 @@ namespace Binary
 
             return result;
         }
+
     }
 }
 

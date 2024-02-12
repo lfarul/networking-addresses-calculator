@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using System.Linq;
+using System.Collections.Generic;
 
 
 namespace Binary
@@ -65,7 +66,6 @@ namespace Binary
             return input.ToString();
         }
 
-
         //IP validation - if 4 octets and within 0-255
 
         //Option 1: Parsing IP address
@@ -89,12 +89,15 @@ namespace Binary
         public static bool IpValidation(string ip)
         {
             string[] ipOctets = ip.Split('.');
+            int[] invalidOctets = new int[ipOctets.Length];
+            int invalidOctetCount = 0;
 
             if (ipOctets.Length == 4)
             {
-                foreach (string octet in ipOctets)
+                for (int i = 0; i < ipOctets.Length; i++)
+                //foreach (string octet in ipOctets)
                 {
-                    if (int.TryParse(octet, out int value))
+                    if (int.TryParse(ipOctets[i], out int value))
                     {
                         if (value >= 0 && value <= 255)
                         {
@@ -104,16 +107,25 @@ namespace Binary
                         else
                         {
                             // Octet is not within the valid range
-                            Console.WriteLine($"Invalid octet: {octet}. Please try again.");
+                            
+
+                            invalidOctets[invalidOctetCount] += value;
+                            invalidOctetCount++;
+
+                            string invalidOutput = String.Join(",", invalidOctets);
+                            Console.WriteLine($"Invalid octet: {invalidOutput}. Please try again.");
                             return false;
+                            
                         }
                     }
                     else
                     {
                         // Parsing failed, the octet is not a valid integer
-                        Console.WriteLine($"Invalid octet format: {octet}. Please try again.");
+                        Console.WriteLine($"Invalid octet format: {ipOctets[i]}. Please try again.");
                         return false;
                     }
+                    
+
                 }
 
                 // All octets are valid
@@ -201,6 +213,8 @@ namespace Binary
             string[] inputParts = input.Split('.');
             string binaryOutput = "";
 
+            StringBuilder builder = new StringBuilder();
+
             if(type == "maska" && inputParts.Length == 1)
             {
                 string binaryOutputlocal = "";
@@ -208,8 +222,12 @@ namespace Binary
 
                 for(int i = 0; i < inputMask; i++)
                 {
-                    binaryOutputlocal += '1';
+                    builder.Append('1');
+                    //binaryOutputlocal += '1';
                 }
+                
+                binaryOutputlocal = builder.ToString();
+
 
                 const int numberOfbits = 32;
 
@@ -225,8 +243,11 @@ namespace Binary
                 foreach (string part in inputParts)
                 {
                     int result = int.Parse(part);
+
+                    builder.Append(part);
                     binaryOutput += Convert.ToString(result, 2).PadLeft(8, '0');
                 }
+
 
                 if (type == "ip")
                 {
@@ -261,19 +282,21 @@ namespace Binary
         // Calculate network address = IP x Maska
         public static string CalculateNetworkAdress(string ip, string maska)
         {
+            StringBuilder builder = new StringBuilder();
             
             for (int i = 0; i < binaryOutputIp.Length; i++)
             {
                 if (binaryOutputIp[i] == '1' && binaryOutputMaska[i] == '1')
                 {
-                    networkAdress += '1';
+                    //networkAdress += '1';
+                    builder.Append('1');
+                    networkAdress = builder.ToString();
                 }
                 else
-                    networkAdress += '0';
+                    //networkAdress += '0';
+                    builder.Append('0');
+                    networkAdress = builder.ToString();
             }
-
-            //Console.WriteLine("NetAdres:    " + networkAdress);
-            //Console.WriteLine();
 
             SeparateAdressByDots(networkAdress, "networkAddress");
             return networkAdress;
@@ -284,45 +307,45 @@ namespace Binary
         {
             int denominator = 8;
 
-            StringBuilder sb = new StringBuilder(input.Length);
+            StringBuilder builder = new StringBuilder(input.Length);
 
             for (int i = 0; i < input.Length; i++)
             {
-                if (i!=0 && i % denominator == 0)
+                if (i != 0 && i % denominator == 0)
                 {
-                    sb.Append('.');
+                    builder.Append('.');
                 }
                 
-                sb.Append(input[i]);
+                builder.Append(input[i]);
             }
 
             if(type == "networkAddress")
             {
-                dotNetworkAdress = sb.ToString();
+                dotNetworkAdress = builder.ToString();
                 //Console.WriteLine("dotNetAdres: " + dotNetworkAdress); 
             }
 
             else if(type == "ip")
             {
-                dotIP = sb.ToString();
+                dotIP = builder.ToString();
                 //Console.WriteLine("dotIP:       " + dotIP);
             }
 
             else if (type == "maska")
             {
-                dotMaska = sb.ToString();
+                dotMaska = builder.ToString();
                 //Console.WriteLine("dotMaska:    " + dotMaska);
             }
 
             else if (type == "notMaska")
             {
-                dotNotMaska = sb.ToString();
+                dotNotMaska = builder.ToString();
                 //Console.WriteLine("dot!Maska:   " + dotNotMaska);
             }
 
             else if (type == "broadcastingAddress")
             {
-                dotBroadcast = sb.ToString();
+                dotBroadcast = builder.ToString();
                 //Console.WriteLine("dotBroadcast:" + dotBroadcast);      
             }
 
@@ -338,21 +361,19 @@ namespace Binary
         // Reverse Maska to Not Maska
         public static string NotMaska(string binaryOutputMaska)
         {
-            StringBuilder sb = new StringBuilder(binaryOutputMaska.Length);
+            StringBuilder builder = new StringBuilder(binaryOutputMaska.Length);
 
             for (int i = 0; i < binaryOutputMaska.Length; i++)
             {
                 if (binaryOutputMaska[i] == '1')
                 {
-                    sb.Append('0');
+                    builder.Append('0');
                 }
                 else
-                    sb.Append('1');
+                    builder.Append('1');
             }     
 
-            notMaska = sb.ToString();
-
-            //Console.WriteLine("!Maska:      " + notMaska);
+            notMaska = builder.ToString();
 
             SeparateAdressByDots(notMaska, "notMaska");
 
@@ -362,19 +383,24 @@ namespace Binary
         //Broadcasting address = network address + not maska
         public static string CalculateBroadcastingAddress(string networkAddress, string notMaska)
         {
+            StringBuilder builder = new StringBuilder();
+
             for(int i = 0; i < networkAddress.Length; i++)
             {
-
                 if (networkAddress[i] == '0' && notMaska[i] == '0')
-                    
-                    broadcastingAddress += '0';
-                
+                {
+                    //broadcastingAddress += '0';
+                    builder.Append('0');
+                    broadcastingAddress = builder.ToString();
+                }
+
                 else
-
-                    broadcastingAddress += '1';
-
+                {
+                    //broadcastingAddress += '1';
+                    builder.Append('1');
+                    broadcastingAddress = builder.ToString();
+                }
             }
-            //Console.WriteLine("BroadcastAd: " + broadcastingAddress);
 
             SeparateAdressByDots(broadcastingAddress, "broadcastingAddress");
 
@@ -462,8 +488,6 @@ namespace Binary
 
                 Console.WriteLine($"First Host IP\t\t {estimatedAddress}");
                 WriteToFile(estimatedAddress);
-
-
             }
 
             else
@@ -492,10 +516,8 @@ namespace Binary
                 // Join the octets back together with dots
                 estimatedAddress = string.Join(".", octets);
 
-
                 Console.WriteLine($"Last Host IP\t\t {estimatedAddress}");
                 WriteToFile(estimatedAddress);
-
             }
 
             else
@@ -508,7 +530,6 @@ namespace Binary
         // Display complementary information
         public static bool ComplementaryInformationRequired (string input)
         {
-
             bool result;
             input = input.ToLower().Trim();
             

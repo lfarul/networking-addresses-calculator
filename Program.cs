@@ -59,8 +59,6 @@ namespace Binary
                 input = input.Replace(symbol.ToString(), ".");
             }
 
-            //input.GetType();
-
             Console.WriteLine("Input after the santization: " + input);
 
             return input.ToString();
@@ -90,14 +88,15 @@ namespace Binary
         {
             string[] ipOctets = ip.Split('.');
             int[] invalidOctets = new int[ipOctets.Length];
-            int invalidOctetCount = 0;
 
             if (ipOctets.Length == 4)
             {
                 for (int i = 0; i < ipOctets.Length; i++)
                 //foreach (string octet in ipOctets)
                 {
-                    if (int.TryParse(ipOctets[i], out int value))
+                    bool parseSuccessfull = int.TryParse(ipOctets[i], out int value);
+
+                    if (parseSuccessfull)
                     {
                         if (value >= 0 && value <= 255)
                         {
@@ -107,25 +106,25 @@ namespace Binary
                         else
                         {
                             // Octet is not within the valid range
-                            
+                            // Using LINQ to filter octets that out of 255
+                            var invalidInput = from octet in ipOctets
+                                                where Convert.ToInt32(octet) > 255
+                                                select octet;
+                                
+                            string invalidInputConcat = String.Join(",", invalidInput);
 
-                            invalidOctets[invalidOctetCount] += value;
-                            invalidOctetCount++;
+                            Console.WriteLine($"Invalid octet[s]: {invalidInputConcat}. Please try again.");
+                            WriteToFile($"Provided IP {ip} contains invalid octet[s]: {invalidInputConcat}.");
 
-                            string invalidOutput = String.Join(",", invalidOctets);
-                            Console.WriteLine($"Invalid octet: {invalidOutput}. Please try again.");
                             return false;
-                            
                         }
                     }
                     else
                     {
                         // Parsing failed, the octet is not a valid integer
-                        Console.WriteLine($"Invalid octet format: {ipOctets[i]}. Please try again.");
+                        Console.WriteLine($"Invalid octet[s] format: {ipOctets[i]}. Please try again.");
                         return false;
                     }
-                    
-
                 }
 
                 // All octets are valid
@@ -133,9 +132,10 @@ namespace Binary
             }
 
             // Incorrect number of octets
-
             string wrongIpFormat = String.Join(".", ipOctets);
             Console.WriteLine($"Provided IP: {wrongIpFormat} has only {ipOctets.Length} octets.  Please try again.");
+            WriteToFile($"Provided IP: {wrongIpFormat} has only {ipOctets.Length} octet[s].");
+
             return false;
         }
 
@@ -158,7 +158,16 @@ namespace Binary
                         else
                         {
                             // Octet is not within the valid range
-                            Console.WriteLine($"Invalid octet: {octet}. Please try again.");
+                            // Using LINQ to filter octets that out of 255
+                            var invalidInput = from octets in maskaOctets
+                                               where Convert.ToInt32(octets) > 255
+                                               select octets;
+
+                            string invalidInputConcat = String.Join(",", invalidInput);
+
+                            Console.WriteLine($"Invalid octet[s]: {invalidInputConcat}. Please try again.");
+                            WriteToFile($"Provided subnet {maska} contains invalid octet[s]: {invalidInputConcat}.");
+
                             return false;
                         }
                     }
@@ -228,26 +237,20 @@ namespace Binary
                 
                 binaryOutputlocal = builder.ToString();
 
-
                 const int numberOfbits = 32;
 
                 binaryOutput = binaryOutputlocal.PadRight(numberOfbits, '0');
 
                 SeparateAdressByDots(binaryOutputMaska, "maska");
                 NotMaska(binaryOutputMaska);
-                //Console.WriteLine("Wynik: " + binaryOutput);
-
             }
             else
             
                 foreach (string part in inputParts)
                 {
                     int result = int.Parse(part);
-
-                    builder.Append(part);
                     binaryOutput += Convert.ToString(result, 2).PadLeft(8, '0');
                 }
-
 
                 if (type == "ip")
                 {
@@ -275,8 +278,6 @@ namespace Binary
                 binaryOutput = "";
 
                 return binaryOutput;
-            
-            //return binaryOutput;
         }
 
         // Calculate network address = IP x Maska
@@ -361,7 +362,7 @@ namespace Binary
         // Reverse Maska to Not Maska
         public static string NotMaska(string binaryOutputMaska)
         {
-            StringBuilder builder = new StringBuilder(binaryOutputMaska.Length);
+            StringBuilder builder = new StringBuilder();
 
             for (int i = 0; i < binaryOutputMaska.Length; i++)
             {
@@ -454,14 +455,11 @@ namespace Binary
             {
                 if (maskaChar[i] == '1')
                     counter++;
-
             }
 
             wykladnik = 32 - counter;
 
             numberOfHosts = (int)Math.Pow(podstawa, wykladnik);
-
-            WriteToFile(numberOfHosts.ToString());
 
             return numberOfHosts;
         }
@@ -487,7 +485,6 @@ namespace Binary
                  estimatedAddress = string.Join(".", octets);
 
                 Console.WriteLine($"First Host IP\t\t {estimatedAddress}");
-                WriteToFile(estimatedAddress);
             }
 
             else
@@ -517,7 +514,7 @@ namespace Binary
                 estimatedAddress = string.Join(".", octets);
 
                 Console.WriteLine($"Last Host IP\t\t {estimatedAddress}");
-                WriteToFile(estimatedAddress);
+                //WriteToFile(estimatedAddress);
             }
 
             else
@@ -560,7 +557,6 @@ namespace Binary
                 Console.WriteLine($"!Maska\t\t\t {dotNotMaska}");
                 Console.WriteLine($"Broadcast Address\t {dotBroadcast}");
                 Console.WriteLine($"Network Address\t\t {dotNetworkAdress}");
-
             }
 
             else
@@ -573,19 +569,24 @@ namespace Binary
             return result;
         }
 
+        // Collecting logs
         public static void WriteToFile(string data)
         {
-            string folder = @"C:\Users\a630281\Desktop";
+            string folder = @"C:\Users\a630281\";
             string fileName = "records.txt";
 
             string fullPath = folder + fileName;
             DateTime date = DateTime.Now;
+ 
+            //DateTime d = DateTime.Today;
 
-            using (StreamWriter writer = new StreamWriter(fullPath))
+            using (StreamWriter writer = new StreamWriter(fullPath, true))
             {
-                writer.WriteLine(date.ToString());
-                writer.WriteLine(data);
-                
+                //writer.Write("-----------------LOGS-------------\n");
+                //writer.Write($"{date.ToString("dd/MM/yyyy")}\t");
+                writer.Write($"{date.ToString()}\t");
+                //writer.Write($"{d.ToString()}\t");
+                writer.Write($"{data}\n"); 
             }
         }
 
@@ -681,7 +682,7 @@ namespace Binary
 
                 ComplementaryInformationRequired(input);
 
-                WriteToFile(input);
+                //WriteToFile(input);
             }
 
             else
@@ -713,7 +714,6 @@ namespace Binary
 
             return result;
         }
-
     }
 }
 

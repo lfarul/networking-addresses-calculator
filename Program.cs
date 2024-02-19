@@ -36,18 +36,30 @@ namespace Binary
         private static string dotBroadcast = "";
         private static string decimalBroadcast = "";
      
-        public static bool ContainForbiddenSymbols(string input, string forbiddenSymbols)
+        public static bool ContainForbiddenSymbols(string input, string forbiddenSymbols, string type)
         {
-            //char[] chars = forbiddenSymbols.ToCharArray();
+            char[] invalidSymbol = forbiddenSymbols.ToCharArray();
 
-            foreach (char symbol in forbiddenSymbols)
+            var invalidChar = invalidSymbol.Where(c => input.Contains(c)).ToArray();
+
+            if(invalidChar.Length > 0)
             {
-                if (input.Contains(symbol.ToString()))
+                string invalidSymbolList = String.Join(" ", invalidChar);
 
-                return true;
+                WriteToFile($"Provided input: {input} contains invalid symbol[s]: '{invalidSymbolList}'.");
+
+                if (type == "ip")
+                    Console.WriteLine($"Provided IP contains forbidden symbols: {invalidSymbolList}.");
+                else
+                    Console.WriteLine($"Provided Subnet contains forbidden symbols: {invalidSymbolList}.");
             }
 
-            return false;
+            else
+            {
+                return false;
+            }
+
+            return true;
         }
         public static string ReplaceForbiddenSymbols(string input,string forbiddenSymbols)
         {
@@ -610,9 +622,9 @@ namespace Binary
                     Console.Write("\nPlease provide address IP: ");
                     ip = Console.ReadLine();
 
-                    if (ContainForbiddenSymbols(ip, forbiddenSymbols))
+                    if (ContainForbiddenSymbols(ip, forbiddenSymbols,"ip"))
                     {
-                        Console.WriteLine("IP contains forbidden symbols.");
+                        //Console.WriteLine("IP contains forbidden symbols.");
                         string ipSanitized = ReplaceForbiddenSymbols(ip, forbiddenSymbols);
                         ip = ipSanitized;
                         ipValidationStatus = IpValidation(ip);
@@ -634,9 +646,9 @@ namespace Binary
                     Console.Write("Please provide subnet mask: ");
                     maska = Console.ReadLine();
 
-                    if (ContainForbiddenSymbols(maska, forbiddenSymbols))
+                    if (ContainForbiddenSymbols(maska, forbiddenSymbols, "maska"))
                     {
-                        Console.WriteLine("Maska contains forbidden symbols.");
+                        //Console.WriteLine("Maska contains forbidden symbols.");
 
                         string maskaSanitized = ReplaceForbiddenSymbols(maska, forbiddenSymbols);
                         maska = maskaSanitized;
@@ -698,8 +710,23 @@ namespace Binary
     {
         public void SayHello()
         {
-            Console.WriteLine("Hallo from NewClass.\n\nThis console application can help you with determining:\n- network address\n- broadcast address\n- first available host\n- last available host\n- number of hosts in a subnet.\n\n" +
-                "The information can be used for:\n- identifying the range of IP addresses that are available for use within a network\n- configuring network devices such as routers and switches and more.\n");
+            string text = "Hallo from NewClass.\n\nThis console application can help you with determining:\n- network address\n- broadcast address\n- first available host\n- last available host\n- number of hosts in a subnet.\n\n \r" +
+                "The information can be used for:\n- identifying the range of IP addresses that are available for use within a network\n- configuring network devices such as routers and switches and more.\n";
+
+            string text2 = text.ToLower().Trim();
+
+            var mostFrequentword = text2
+                .Split(new[] { ' ', '.', '-', ':', ',','\n','\r' }, StringSplitOptions.RemoveEmptyEntries)
+                .GroupBy(word => word)
+                .Select(group => new { Word = group.Key, Count = group.Count() })
+                .OrderByDescending(item => item.Count);
+
+            // Find the most popular word
+            var mostPopularWord = mostFrequentword.FirstOrDefault();
+
+            Console.WriteLine($"{text}\n");
+
+            //Console.WriteLine($"Most popular word in the introduction is: {mostPopularWord}\n");
         }
 
         public bool CanWeStart()
